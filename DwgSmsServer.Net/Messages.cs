@@ -338,10 +338,7 @@ namespace DwgSmsServerNet.Messages
             Number = number;
             Message = message;
 
-            ContentLength = (short)Encoding.Unicode.GetBytes(Message).Length;
-            if (ContentLength > 1340)
-                throw new NotSupportedException("Messages encoded to Unicode which more than 1340 bytes not supported");
-
+            ContentLength = (short)Encoding.BigEndianUnicode.GetByteCount(message);
 
             Length = 30 + ContentLength; //30 byte = port + number  + message
         }
@@ -369,7 +366,7 @@ namespace DwgSmsServerNet.Messages
 
         public override string ToString()
         {
-            return "";
+            return string.Format("Number: {0}", Number);
         }
     }
     class SendSmsResponseBody : MessageBody
@@ -423,7 +420,7 @@ namespace DwgSmsServerNet.Messages
 
         public override string ToString()
         {
-            return string.Format("Number: {0}; Result: {1}", Number.Trim(), Result);
+            return string.Format("Number: {0}; Result: {1}; {2}/{3}; ", Number.Trim(), Result, SucceededSlices, CountOfSlices);
         }
     }
     class SendSmsResultResponseBody : MessageBody

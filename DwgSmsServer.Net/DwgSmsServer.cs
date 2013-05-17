@@ -10,17 +10,25 @@ using System.Collections.ObjectModel;
 
 namespace DwgSmsServerNet
 {
+    public delegate void DwgStateChangedDelegate(DwgSmsServerState state);
+    public delegate void DwgSmsSendingResultDelegate(int port, string number, SendSmsResult result, int totalSlices, int succededSlices);
+    public delegate void DwgErrorDelegate(string error);
+
     public class DwgSmsServer
     {
         /// <summary>
         /// Occurs when State of server changed
         /// </summary>
-        public event Action<DwgSmsServerState> StateChanged = s => { };
+        public event DwgStateChangedDelegate StateChanged = s => { };
         /// <summary>
         /// Occurs on server error
         /// </summary>
-        public event Action<string> Error = s => { };
-       
+        public event DwgErrorDelegate Error = s => { };
+        /// <summary>
+        /// Occurs on info about sended SMS from Dwg
+        /// </summary>
+        public event DwgSmsSendingResultDelegate SmsSendingResult = (p, s, r, t, sd) => { };
+
         /// <summary>
         /// Listen port of SMS Server
         /// </summary>
@@ -124,7 +132,8 @@ namespace DwgSmsServerNet
                 throw new NotSupportedException("Can't send SMS from not connected server");
             if (port < 0 || port > PortsCount || PortsStatuses[port] != PortStatus.Works)
                 throw new NotSupportedException("Port should be in \"Works\" status");
-
+            if (Encoding.BigEndianUnicode.GetByteCount(message) > 1340)
+                throw new NotSupportedException("Message encoded to Unicode should be less than 1340 bytes");
 
             SendSmsRequestBody body = new SendSmsRequestBody(port, number, message);
             SendToDwg(body);
@@ -186,12 +195,12 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == MessageType.StatusRequest)
                     {
-                        StatusRequestBody body = msg.Body as StatusRequestBody;
-                        PortsCount = body.PortsCount;
-
-                        PortsStatuses = new ReadOnlyCollection<PortStatus>(body.PortsStatuses);
-
                         SendToDwg(new StatusResponseBody(Result.Succeed));
+
+                        StatusRequestBody body = msg.Body as StatusRequestBody;
+                        
+                        PortsCount = body.PortsCount;
+                        PortsStatuses = new ReadOnlyCollection<PortStatus>(body.PortsStatuses);
                     }
 
                     if (msg.Header.Type == MessageType.CsqRssiRequest)
@@ -214,9 +223,10 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == MessageType.SendSmsResultRequest)
                     {
-                        SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
-
                         SendToDwg(new SendSmsResultResponseBody(Result.Succeed));
+
+                        SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
+                        SmsSendingResult(body.Port, body.Number, body.Result, body.CountOfSlices, body.SucceededSlices); 
                     }
                 }
             }
