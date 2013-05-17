@@ -12,9 +12,15 @@ namespace DwgSmsServerNet
 {
     public class DwgSmsServer
     {
+        /// <summary>
+        /// Occurs when State of server changed
+        /// </summary>
         public event Action<DwgSmsServerState> StateChanged = s => { };
+        /// <summary>
+        /// Occurs on server error
+        /// </summary>
         public event Action<string> Error = s => { };
-
+       
         /// <summary>
         /// Listen port of SMS Server
         /// </summary>
@@ -46,12 +52,24 @@ namespace DwgSmsServerNet
         /// </summary>
         public ReadOnlyCollection<PortStatus> PortsStatuses { get; set; }
 
+        //all about Dwg listening
         private Thread _listenerThread = null;
         private Socket _listenSocket = null;
         private TcpListener _listener = null;
 
+        //mac address of Dwg
         private byte[] _macAddress = new byte[6];
 
+        //Send sms result
+        private AutoResetEvent _sendSmsEvent = new AutoResetEvent(false);
+        private SendSmsResult _sendSmsResult;
+
+        /// <summary>
+        /// Creating Dwg SMS Server
+        /// </summary>
+        /// <param name="port">Port to listen Dwg. Should be same in Dwg settings</param>
+        /// <param name="user">User name of SMS server. Should be same in Dwg settings</param>
+        /// <param name="password">Password of SMS server. Should be same in Dwg settings</param>
         public DwgSmsServer(int port, string user, string password)
         {
             if (string.IsNullOrEmpty(user))
@@ -100,13 +118,21 @@ namespace DwgSmsServerNet
         /// <param name="port">Dwg port to send from</param>
         /// <param name="number">Phone number</param>
         /// <param name="message">Message to send</param>
-        public void SendSms(byte port, string number, string message)
+        public SendSmsResult SendSms(byte port, string number, string message)
         {
             if (State != DwgSmsServerState.Connected)
-                throw new NotSupportedException("Can't send SMS with not connected server");
+                throw new NotSupportedException("Can't send SMS from not connected server");
+            if (port < 0 || port > PortsCount || PortsStatuses[port] != PortStatus.Works)
+                throw new NotSupportedException("Port should be in \"Works\" status");
+
 
             SendSmsRequestBody body = new SendSmsRequestBody(port, number, message);
             SendToDwg(body);
+
+            //wait for response from dwg
+            _sendSmsEvent.WaitOne();
+
+            return _sendSmsResult;
         }
 
 
@@ -179,8 +205,18 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == MessageType.SendSmsResponse)
                     {
-                        SendSmsResultResponseBody body = msg.Body as SendSmsResultResponseBody;
+                        SendSmsResponseBody body = msg.Body as SendSmsResponseBody;
+                        _sendSmsResult = body.Result;
 
+                        //signal to SendSms method, that response recieved
+                        _sendSmsEvent.Set();
+                    }
+
+                    if (msg.Header.Type == MessageType.SendSmsResultRequest)
+                    {
+                        SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
+
+                        SendToDwg(new SendSmsResultResponseBody(Result.Succeed));
                     }
                 }
             }

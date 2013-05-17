@@ -406,7 +406,7 @@ namespace DwgSmsServerNet.Messages
             CountOfNumbers = readingBytes.Take(1).First();
             readingBytes = readingBytes.Skip(1);
 
-            Number = Encoding.ASCII.GetString(readingBytes.Take(24).ToArray());
+            Number = Encoding.ASCII.GetString(readingBytes.Take(24).ToArray()).Trim('\0');
             readingBytes = readingBytes.Skip(24);
 
             Port = readingBytes.Take(1).First();
