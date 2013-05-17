@@ -10,10 +10,6 @@ using System.Collections.ObjectModel;
 
 namespace DwgSmsServerNet
 {
-    public delegate void DwgStateChangedDelegate(DwgSmsServerState state);
-    public delegate void DwgSmsSendingResultDelegate(int port, string number, SendSmsResult result, int totalSlices, int succededSlices);
-    public delegate void DwgErrorDelegate(string error);
-
     public class DwgSmsServer
     {
         /// <summary>
@@ -58,7 +54,7 @@ namespace DwgSmsServerNet
         /// <summary>
         /// Statuses of ports
         /// </summary>
-        public ReadOnlyCollection<PortStatus> PortsStatuses { get; set; }
+        public ReadOnlyCollection<DwgPortStatus> PortsStatuses { get; set; }
 
         //all about Dwg listening
         private Thread _listenerThread = null;
@@ -70,7 +66,7 @@ namespace DwgSmsServerNet
 
         //Send sms result
         private AutoResetEvent _sendSmsEvent = new AutoResetEvent(false);
-        private SendSmsResult _sendSmsResult;
+        private DwgSendSmsResult _sendSmsResult;
 
         /// <summary>
         /// Creating Dwg SMS Server
@@ -126,11 +122,11 @@ namespace DwgSmsServerNet
         /// <param name="port">Dwg port to send from</param>
         /// <param name="number">Phone number</param>
         /// <param name="message">Message to send</param>
-        public SendSmsResult SendSms(byte port, string number, string message)
+        public DwgSendSmsResult SendSms(byte port, string number, string message)
         {
             if (State != DwgSmsServerState.Connected)
                 throw new NotSupportedException("Can't send SMS from not connected server");
-            if (port < 0 || port > PortsCount || PortsStatuses[port] != PortStatus.Works)
+            if (port < 0 || port > PortsCount || PortsStatuses[port] != DwgPortStatus.Works)
                 throw new NotSupportedException("Port should be in \"Works\" status");
             if (Encoding.BigEndianUnicode.GetByteCount(message) > 1340)
                 throw new NotSupportedException("Message encoded to Unicode should be less than 1340 bytes");
@@ -200,7 +196,7 @@ namespace DwgSmsServerNet
                         StatusRequestBody body = msg.Body as StatusRequestBody;
                         
                         PortsCount = body.PortsCount;
-                        PortsStatuses = new ReadOnlyCollection<PortStatus>(body.PortsStatuses);
+                        PortsStatuses = new ReadOnlyCollection<DwgPortStatus>(body.PortsStatuses);
                     }
 
                     if (msg.Header.Type == MessageType.CsqRssiRequest)
@@ -244,25 +240,5 @@ namespace DwgSmsServerNet
 
             Console.WriteLine(msgToSend);
         }
-    }
-
-    public enum DwgSmsServerState
-    {
-        /// <summary>
-        /// Dwg listener not started
-        /// </summary>
-        Disconnected,
-        /// <summary>
-        /// Dwg listener started, waiting for Dwg to connect
-        /// </summary>
-        WaitingDwg,
-        /// <summary>
-        /// Connecting to Dwg
-        /// </summary>
-        Connecting,
-        /// <summary>
-        /// Dwg connected
-        /// </summary>
-        Connected
     }
 }

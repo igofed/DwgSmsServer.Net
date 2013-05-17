@@ -183,23 +183,6 @@ namespace DwgSmsServerNet.Messages
         AuthenticationRequest = 0x0F,
         AuthenticationResponse = 0x10
     }
-    public enum SendSmsResult : byte
-    {
-        Succeed = 0,
-        Fail = 1,
-        Timeout = 2,
-        BadRequest = 3,
-        PortUnavailable = 4,
-        PartialSucceed = 5,
-        OtherRrror = 255
-    }
-    public enum PortStatus : byte
-    {
-        Works = 0,
-        NoSimCardInserted = 1,
-        NotRegistered = 2,
-        Unavailable = 3
-    }
     enum Result : byte
     {
         Succeed = 0,
@@ -287,14 +270,14 @@ namespace DwgSmsServerNet.Messages
     class StatusRequestBody : MessageBody
     {
         public byte PortsCount { get; set; }
-        public PortStatus[] PortsStatuses { get; set; }
+        public DwgPortStatus[] PortsStatuses { get; set; }
 
         public StatusRequestBody(byte[] bytes)
         {
             Length = bytes.Length;
 
             PortsCount = bytes.Take(1).First();
-            PortsStatuses = bytes.Skip(1).Select(status => (PortStatus)status).ToArray();
+            PortsStatuses = bytes.Skip(1).Select(status => (DwgPortStatus)status).ToArray();
         }
 
         public override string ToString()
@@ -371,11 +354,11 @@ namespace DwgSmsServerNet.Messages
     }
     class SendSmsResponseBody : MessageBody
     {
-        public SendSmsResult Result { get; protected set; }
+        public DwgSendSmsResult Result { get; protected set; }
 
         public SendSmsResponseBody(byte[] bytes)
         {
-            Result = (SendSmsResult)bytes[0];
+            Result = (DwgSendSmsResult)bytes[0];
         }
 
         public override string ToString()
@@ -389,7 +372,7 @@ namespace DwgSmsServerNet.Messages
         public byte CountOfNumbers { get; set; }
         public string Number { get; set; }
         public byte Port { get; set; }
-        public SendSmsResult Result { get; set; }
+        public DwgSendSmsResult Result { get; set; }
         public byte CountOfSlices { get; set; }
         public byte SucceededSlices { get; set; }
 
@@ -409,7 +392,7 @@ namespace DwgSmsServerNet.Messages
             Port = readingBytes.Take(1).First();
             readingBytes = readingBytes.Skip(1);
 
-            Result = (SendSmsResult)readingBytes.Take(1).First();
+            Result = (DwgSendSmsResult)readingBytes.Take(1).First();
             readingBytes = readingBytes.Skip(1);
 
             CountOfSlices = readingBytes.Take(1).First();

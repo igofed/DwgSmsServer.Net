@@ -8,7 +8,7 @@
     <ProjectGuid>{1ECFC007-F0E0-4323-8FFD-4A6952260721}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DwgSmsServer.Net</RootNamespace>
+    <RootNamespace>DwgSmsServerNet</RootNamespace>
     <AssemblyName>DwgSmsServer.Net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -43,6 +43,7 @@
     <Compile Include="DwgSmsServer.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stuff.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
