@@ -87,6 +87,9 @@ namespace DwgSmsServerNet.Messages
                 case DwgMessageType.SendSmsResultRequest:
                     Body = new SendSmsResultRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
                     break;
+                case DwgMessageType.KeepAlive:
+                    Body = new KeepAliveBody();
+                    break;
                 default:
                     throw new NotSupportedException();
             }
@@ -168,6 +171,8 @@ namespace DwgSmsServerNet.Messages
     }
     enum DwgMessageType : byte
     {
+        KeepAlive = 0x00,
+
         SendSmsRequest = 0x01,
         SendSmsResponse = 0x02,
 
@@ -417,6 +422,14 @@ namespace DwgSmsServerNet.Messages
         public override string ToString()
         {
             return Result.ToString();
+        }
+    }
+
+    class KeepAliveBody : DwgMessageBody
+    {
+        public override byte[] ToBytes()
+        {
+            return new byte[0];
         }
     }
 }

@@ -224,6 +224,11 @@ namespace DwgSmsServerNet
                         SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
                         SmsSendingResult(body.Port, body.Number, body.Result, body.CountOfSlices, body.SucceededSlices); 
                     }
+
+                    if (msg.Header.Type == DwgMessageType.KeepAlive)
+                    {
+                        SendToDwg(new KeepAliveBody());
+                    }
                 }
             }
             catch (ThreadAbortException)
