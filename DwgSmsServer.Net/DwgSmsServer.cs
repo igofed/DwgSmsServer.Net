@@ -69,6 +69,9 @@ namespace DwgSmsServerNet
             Password = password;
         }
 
+        /// <summary>
+        /// Start Dwg SMS server
+        /// </summary>
         public void Start()
         {
             if (State != DwgSmsServerState.Disconnected)
@@ -80,6 +83,9 @@ namespace DwgSmsServerNet
             _listenerThread.Start();
         }
 
+        /// <summary>
+        /// Stop Dwg SMS server
+        /// </summary>
         public void Stop()
         {
             if (State == DwgSmsServerState.Disconnected)
@@ -88,6 +94,20 @@ namespace DwgSmsServerNet
             _listenerThread.Abort();
         }
 
+        /// <summary>
+        /// Send SMS message
+        /// </summary>
+        /// <param name="port">Dwg port to send from</param>
+        /// <param name="number">Phone number</param>
+        /// <param name="message">Message to send</param>
+        public void SendSms(byte port, string number, string message)
+        {
+            if (State != DwgSmsServerState.Connected)
+                throw new NotSupportedException("Can't send SMS with not connected server");
+
+            SendSmsRequestBody body = new SendSmsRequestBody(port, number, message);
+            SendToDwg(body);
+        }
 
 
         private void WorkingThread()
@@ -102,7 +122,7 @@ namespace DwgSmsServerNet
                 
 
                 _listenSocket = _listener.AcceptSocket();
-                //Dwg just connected with socket. Now starting to connect
+                //Dwg just connected with socket. Now starting to exchange packets
                 State = DwgSmsServerState.Connecting;
 
                 while (true)
@@ -155,6 +175,12 @@ namespace DwgSmsServerNet
                         //if this is first csq rssi message - then from this moment we connected
                         if (State == DwgSmsServerState.Connecting)
                             State = DwgSmsServerState.Connected;
+                    }
+
+                    if (msg.Header.Type == MessageType.SendSmsResponse)
+                    {
+                        SendSmsResultResponseBody body = msg.Body as SendSmsResultResponseBody;
+
                     }
                 }
             }
