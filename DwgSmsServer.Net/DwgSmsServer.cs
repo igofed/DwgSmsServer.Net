@@ -140,9 +140,20 @@ namespace DwgSmsServerNet
             return _sendSmsResult;
         }
 
-        public void SendUssd()
+        /// <summary>
+        /// Send USSD request
+        /// </summary>
+        /// <param name="port">DWG port to send from</param>
+        /// <param name="type">USSD type</param>
+        /// <param name="ussd">USSD request content</param>
+        public void SendUssd(byte port, DwgUssdType type, string ussd)
         {
-            SendToDwg(new SendUssdRequestBody(0, DwgUssdType.Send, "*100#*"));
+            if (State != DwgSmsServerState.Connected)
+                throw new NotSupportedException("Can't send SMS from not connected server");
+            if (port < 0 || port > PortsCount || PortsStatuses[port] != DwgPortStatus.Works)
+                throw new NotSupportedException("Port should be in \"Works\" status");
+
+            SendToDwg(new SendUssdRequestBody(port, type, ussd));
         }
 
         //main wotk method
@@ -233,6 +244,11 @@ namespace DwgSmsServerNet
                     if (msg.Header.Type == DwgMessageType.SendUssdResponse)
                     {
                         //here logic
+                    }
+
+                    if (msg.Header.Type == DwgMessageType.RecieveUssdMessageRequest)
+                    {
+                        SendToDwg(new RecieveUssdMessageResponseBody(Result.Succeed));
                     }
 
                     if (msg.Header.Type == DwgMessageType.KeepAlive)

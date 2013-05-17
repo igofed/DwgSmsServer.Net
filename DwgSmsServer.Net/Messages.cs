@@ -62,6 +62,14 @@ namespace DwgSmsServerNet.Messages
             {
                 type = DwgMessageType.SendUssdResponse;
             }
+            else if (body is RecieveUssdMessageRequestBody)
+            {
+                type = DwgMessageType.RecieveUssdMessageRequest;
+            }
+            else if (body is RecieveUssdMessageResponseBody)
+            {
+                type = DwgMessageType.RecieveUssdMessageResponse;
+            }
 
             if (!type.HasValue)
                 throw new NotSupportedException("This type of messages not supported");
@@ -102,6 +110,9 @@ namespace DwgSmsServerNet.Messages
                     break;
                 case DwgMessageType.SendUssdResponse:
                     Body = new SendUssdResponseBody(bodyBytes);
+                    break;
+                case DwgMessageType.RecieveUssdMessageRequest:
+                    Body = new RecieveUssdMessageRequestBody(bodyBytes);
                     break;
                 default:
                     throw new NotSupportedException();
@@ -197,9 +208,9 @@ namespace DwgSmsServerNet.Messages
 
         SendUssdRequest = 0x09,
         SendUssdResponse = 0x0A,
-        
-        ReceiveUssdMessageRequest = 0x0B,
-        ReceiveUssdMessageResponse = 0x0C,
+
+        RecieveUssdMessageRequest = 0x0B,
+        RecieveUssdMessageResponse = 0x0C,
 
         CsqRssiRequest = 0x0D,
         CsqRssiResponse = 0x0E,
@@ -456,8 +467,8 @@ namespace DwgSmsServerNet.Messages
             Port = port;
             Content = content;
             Type = type;
-
-            Length = 4 + Encoding.ASCII.GetByteCount(content);
+            ContentLength = (short)Encoding.ASCII.GetByteCount(content);
+            Length = 4 + ContentLength;
         }
 
         public override byte[] ToBytes()
@@ -467,6 +478,11 @@ namespace DwgSmsServerNet.Messages
             var contentBytes = Encoding.ASCII.GetBytes(Content);
 
             return info.Concat(contentLengthBytes).Concat(contentBytes).ToArray();
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1}", Type, Content);
         }
     }
     class SendUssdResponseBody : DwgMessageBody
@@ -478,6 +494,58 @@ namespace DwgSmsServerNet.Messages
             Length = 1;
 
             Result = (DwgSendUssdResult)bytes.First();
+        }
+
+        public override string ToString()
+        {
+            return Result.ToString();
+        }
+    }
+
+    class RecieveUssdMessageRequestBody : DwgMessageBody
+    {
+        public byte Port { get; set; }
+        public DwgRecieveUssdResult Status { get; set; }
+        public short ContentLength { get; set; }
+        public string Content { get; set; }
+
+        public RecieveUssdMessageRequestBody(byte[] bytes)
+        {
+            Length = bytes.Length;
+
+            Port = bytes[0];
+            Status = (DwgRecieveUssdResult)bytes[1];
+
+            ContentLength = BitConverter.ToInt16(bytes, 2);
+
+            //skip 5 because of 5 bit is encoding, which always Unicode
+            Content = Encoding.BigEndianUnicode.GetString(bytes.Skip(5).Take(ContentLength).ToArray());
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1}", Status, Content);
+        }
+    }
+    class RecieveUssdMessageResponseBody : DwgMessageBody
+    {
+        public Result Result { get; private set; }
+
+        public RecieveUssdMessageResponseBody(Result result)
+        {
+            Length = 1;
+
+            Result = result;
+        }
+
+        public override byte[] ToBytes()
+        {
+            return new byte[] { (byte)Result };
+        }
+
+        public override string ToString()
+        {
+            return Result.ToString();
         }
     }
 

@@ -90,4 +90,14 @@ namespace DwgSmsServerNet
         PortUnavailable = 4,
         OtherError = 255
     }
+    /// <summary>
+    /// Result of USSD
+    /// </summary>
+    public enum DwgRecieveUssdResult : byte
+    {
+        NoFurtherUserActionRequired = 0,
+        FurtherUserActionRequired = 1,
+        UssdTerminatedByNetwork = 2,
+        OperationNotSupported = 4
+    }
 }
