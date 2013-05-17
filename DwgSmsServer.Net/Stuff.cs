@@ -58,7 +58,7 @@ namespace DwgSmsServerNet
         BadRequest = 3,
         PortUnavailable = 4,
         PartialSucceed = 5,
-        OtherRrror = 255
+        OtherError = 255
     }
     /// <summary>
     /// DWG port status
@@ -69,5 +69,25 @@ namespace DwgSmsServerNet
         NoSim = 1,
         NotRegistered = 2,
         Unavailable = 3
+    }
+    /// <summary>
+    /// DWG USSD type
+    /// </summary>
+    public enum DwgUssdType
+    {
+        Send = 1,
+        EndSession = 2
+    }
+    /// <summary>
+    /// Result of sending USSD
+    /// </summary>
+    public enum DwgSendUssdResult : byte
+    {
+        Succeed = 0,
+        Fail = 1,
+        Timeout = 2,
+        BadRequest = 3,
+        PortUnavailable = 4,
+        OtherError = 255
     }
 }

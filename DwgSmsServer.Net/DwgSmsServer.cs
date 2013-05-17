@@ -21,7 +21,7 @@ namespace DwgSmsServerNet
         /// </summary>
         public event DwgErrorDelegate Error = e => { };
         /// <summary>
-        /// Occurs on info about sended SMS from Dwg
+        /// Occurs on info about sent SMS from DWG
         /// </summary>
         public event DwgSmsSendingResultDelegate SmsSendingResult = (p, n, r, t, s) => { };
 
@@ -140,6 +140,11 @@ namespace DwgSmsServerNet
             return _sendSmsResult;
         }
 
+        public void SendUssd()
+        {
+            SendToDwg(new SendUssdRequestBody(0, DwgUssdType.Send, "*100#*"));
+        }
+
         //main wotk method
         private void WorkingThread()
         {
@@ -223,6 +228,11 @@ namespace DwgSmsServerNet
 
                         SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
                         SmsSendingResult(body.Port, body.Number, body.Result, body.CountOfSlices, body.SucceededSlices); 
+                    }
+
+                    if (msg.Header.Type == DwgMessageType.SendUssdResponse)
+                    {
+                        //here logic
                     }
 
                     if (msg.Header.Type == DwgMessageType.KeepAlive)

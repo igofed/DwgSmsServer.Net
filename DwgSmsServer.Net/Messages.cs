@@ -54,6 +54,14 @@ namespace DwgSmsServerNet.Messages
             {
                 type = DwgMessageType.SendSmsResultResponse;
             }
+            else if (body is SendUssdRequestBody)
+            {
+                type = DwgMessageType.SendUssdRequest;
+            }
+            else if (body is SendUssdResponseBody)
+            {
+                type = DwgMessageType.SendUssdResponse;
+            }
 
             if (!type.HasValue)
                 throw new NotSupportedException("This type of messages not supported");
@@ -70,25 +78,30 @@ namespace DwgSmsServerNet.Messages
             Header = new DwgMessageHeader(readingBytes.Take(24).ToArray());
             readingBytes = readingBytes.Skip(24);
 
+            var bodyBytes = readingBytes.Take(Header.BodyLength).ToArray();
+
             switch (Header.Type)
             {
                 case DwgMessageType.AuthenticationRequest:
-                    Body = new AuthenticationRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
+                    Body = new AuthenticationRequestBody(bodyBytes);
                     break;
                 case DwgMessageType.StatusRequest:
-                    Body = new StatusRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
+                    Body = new StatusRequestBody(bodyBytes);
                     break;
                 case DwgMessageType.CsqRssiRequest:
-                    Body = new CsqRssiRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
+                    Body = new CsqRssiRequestBody(bodyBytes);
                     break;
                 case DwgMessageType.SendSmsResponse:
-                    Body = new SendSmsResponseBody(readingBytes.Take(Header.BodyLength).ToArray());
+                    Body = new SendSmsResponseBody(bodyBytes);
                     break;
                 case DwgMessageType.SendSmsResultRequest:
-                    Body = new SendSmsResultRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
+                    Body = new SendSmsResultRequestBody(bodyBytes);
                     break;
                 case DwgMessageType.KeepAlive:
                     Body = new KeepAliveBody();
+                    break;
+                case DwgMessageType.SendUssdResponse:
+                    Body = new SendUssdResponseBody(bodyBytes);
                     break;
                 default:
                     throw new NotSupportedException();
@@ -182,6 +195,12 @@ namespace DwgSmsServerNet.Messages
         StatusRequest = 0x07,
         StatusResponse = 0x08,
 
+        SendUssdRequest = 0x09,
+        SendUssdResponse = 0x0A,
+        
+        ReceiveUssdMessageRequest = 0x0B,
+        ReceiveUssdMessageResponse = 0x0C,
+
         CsqRssiRequest = 0x0D,
         CsqRssiResponse = 0x0E,
 
@@ -232,86 +251,6 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class CsqRssiRequestBody : DwgMessageBody
-    {
-        public byte CountOfPorts { get; private set; }
-        public byte[] PortStatuses { get; private set; }
-
-        public CsqRssiRequestBody(byte[] bytes)
-        {
-            Length = bytes.Length;
-
-            CountOfPorts = bytes.Take(1).First();
-            PortStatuses = bytes.Skip(1).ToArray();
-        }
-
-        public override string ToString()
-        {
-            return string.Join(",", PortStatuses);
-        }
-    }
-    class CsqRssiResponseBody : DwgMessageBody
-    {
-        public Result Result { get; private set; }
-
-        public CsqRssiResponseBody(Result result)
-        {
-            Length = 1;
-
-            Result = result;
-        }
-
-        public override byte[] ToBytes()
-        {
-            return new byte[] { (byte)Result };
-        }
-
-        public override string ToString()
-        {
-            return Result.ToString();
-        }
-    }
-
-    class StatusRequestBody : DwgMessageBody
-    {
-        public byte PortsCount { get; private set; }
-        public DwgPortStatus[] PortsStatuses { get; private set; }
-
-        public StatusRequestBody(byte[] bytes)
-        {
-            Length = bytes.Length;
-
-            PortsCount = bytes.Take(1).First();
-            PortsStatuses = bytes.Skip(1).Select(status => (DwgPortStatus)status).ToArray();
-        }
-
-        public override string ToString()
-        {
-            return string.Join(",", PortsStatuses);
-        }
-    }
-    class StatusResponseBody : DwgMessageBody
-    {
-        public Result Result { get; private set; }
-
-        public StatusResponseBody(Result result)
-        {
-            Length = 1;
-
-            Result = result;
-        }
-
-        public override byte[] ToBytes()
-        {
-            return new byte[] { (byte)Result };
-        }
-
-        public override string ToString()
-        {
-            return Result.ToString();
-        }
-    }
-
     class SendSmsRequestBody : DwgMessageBody
     {
         public byte Port { get; private set; }
@@ -336,7 +275,7 @@ namespace DwgSmsServerNet.Messages
             //encding = always Unicode
             //message type = always SMS
             //ncountofnumbers = always 1 number to sms
-            byte[] infoBytes = { Port, 1, 0, 1 }; 
+            byte[] infoBytes = { Port, 1, 0, 1 };
             var numberBytes = Encoding.ASCII.GetBytes(Number).Concat(new byte[24 - Number.Length]);
             var messageLengthBytes = BitConverter.GetBytes((short)ContentLength).Reverse();
             var messageBytes = Encoding.BigEndianUnicode.GetBytes(Message);
@@ -422,6 +361,123 @@ namespace DwgSmsServerNet.Messages
         public override string ToString()
         {
             return Result.ToString();
+        }
+    }
+
+    class StatusRequestBody : DwgMessageBody
+    {
+        public byte PortsCount { get; private set; }
+        public DwgPortStatus[] PortsStatuses { get; private set; }
+
+        public StatusRequestBody(byte[] bytes)
+        {
+            Length = bytes.Length;
+
+            PortsCount = bytes.Take(1).First();
+            PortsStatuses = bytes.Skip(1).Select(status => (DwgPortStatus)status).ToArray();
+        }
+
+        public override string ToString()
+        {
+            return string.Join(",", PortsStatuses);
+        }
+    }
+    class StatusResponseBody : DwgMessageBody
+    {
+        public Result Result { get; private set; }
+
+        public StatusResponseBody(Result result)
+        {
+            Length = 1;
+
+            Result = result;
+        }
+
+        public override byte[] ToBytes()
+        {
+            return new byte[] { (byte)Result };
+        }
+
+        public override string ToString()
+        {
+            return Result.ToString();
+        }
+    }
+
+    class CsqRssiRequestBody : DwgMessageBody
+    {
+        public byte CountOfPorts { get; private set; }
+        public byte[] PortStatuses { get; private set; }
+
+        public CsqRssiRequestBody(byte[] bytes)
+        {
+            Length = bytes.Length;
+
+            CountOfPorts = bytes.Take(1).First();
+            PortStatuses = bytes.Skip(1).ToArray();
+        }
+
+        public override string ToString()
+        {
+            return string.Join(",", PortStatuses);
+        }
+    }
+    class CsqRssiResponseBody : DwgMessageBody
+    {
+        public Result Result { get; private set; }
+
+        public CsqRssiResponseBody(Result result)
+        {
+            Length = 1;
+
+            Result = result;
+        }
+
+        public override byte[] ToBytes()
+        {
+            return new byte[] { (byte)Result };
+        }
+
+        public override string ToString()
+        {
+            return Result.ToString();
+        }
+    }
+
+    class SendUssdRequestBody : DwgMessageBody
+    {
+        public byte Port { get; private set; }
+        public DwgUssdType Type { get; private set; }
+        public short ContentLength { get; private set; }
+        public string Content { get; private set; }
+
+        public SendUssdRequestBody(byte port, DwgUssdType type, string content)
+        {
+            Port = port;
+            Content = content;
+            Type = type;
+
+            Length = 4 + Encoding.ASCII.GetByteCount(content);
+        }
+
+        public override byte[] ToBytes()
+        {
+            byte[] info = { Port, (byte)Type };
+            var contentLengthBytes = BitConverter.GetBytes(ContentLength).Reverse();
+            var contentBytes = Encoding.ASCII.GetBytes(Content);
+
+            return info.Concat(contentLengthBytes).Concat(contentBytes).ToArray();
+        }
+    }
+    class SendUssdResponseBody : DwgMessageBody
+    {
+        public DwgSendUssdResult Result { get; private set; }
+
+        public SendUssdResponseBody(byte[] bytes)
+        {
+            Length = 1;
+
+            Result = (DwgSendUssdResult)bytes.First();
         }
     }
 
