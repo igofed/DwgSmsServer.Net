@@ -24,6 +24,11 @@ namespace DwgSmsServerNet
         /// Occurs on info about sent SMS from DWG
         /// </summary>
         public event DwgSmsSendingResultDelegate SmsSendingResult = (p, n, r, t, s) => { };
+        /// <summary>
+        /// Occurs on info abous sent USSD from DWG
+        /// </summary>
+        public event DwgUssdSendingResultDelegate UssdSendingResult = (p, r, m) => { };
+
 
         /// <summary>
         /// Listen port of SMS Server
@@ -67,6 +72,10 @@ namespace DwgSmsServerNet
         //Send sms result
         private AutoResetEvent _sendSmsEvent = new AutoResetEvent(false);
         private DwgSendSmsResult _sendSmsResult;
+
+        //Send ussd result
+        private AutoResetEvent _sendUssdEvent = new AutoResetEvent(false);
+        private DwgSendUssdResult _sendUssdResult;
 
         /// <summary>
         /// Creating DWG SMS Server
@@ -122,6 +131,7 @@ namespace DwgSmsServerNet
         /// <param name="port">DWG port to send from</param>
         /// <param name="number">Phone number</param>
         /// <param name="message">Message to send</param>
+        /// <returns>Result of sending SMS</returns>
         public DwgSendSmsResult SendSms(byte port, string number, string message)
         {
             if (State != DwgSmsServerState.Connected)
@@ -146,7 +156,8 @@ namespace DwgSmsServerNet
         /// <param name="port">DWG port to send from</param>
         /// <param name="type">USSD type</param>
         /// <param name="ussd">USSD request content</param>
-        public void SendUssd(byte port, DwgUssdType type, string ussd)
+        /// <returns>Result of sending USSD to network</returns>
+        public DwgSendUssdResult SendUssd(byte port, DwgUssdType type, string ussd)
         {
             if (State != DwgSmsServerState.Connected)
                 throw new NotSupportedException("Can't send SMS from not connected server");
@@ -154,6 +165,10 @@ namespace DwgSmsServerNet
                 throw new NotSupportedException("Port should be in \"Works\" status");
 
             SendToDwg(new SendUssdRequestBody(port, type, ussd));
+
+            _sendUssdEvent.WaitOne();
+
+            return _sendUssdResult;
         }
 
         //main wotk method
@@ -166,7 +181,7 @@ namespace DwgSmsServerNet
 
                 //Listener started - now in WaitingDwg state
                 State = DwgSmsServerState.WaitingDwg;
-                
+
 
                 _listenSocket = _listener.AcceptSocket();
                 //Dwg just connected with socket. Now starting to exchange packets
@@ -202,7 +217,7 @@ namespace DwgSmsServerNet
                         {
                             Error(string.Format("Wrong user. Expected: {0}; Recieved: {1}", User, body.User));
                             Stop();
-                        }        
+                        }
                     }
 
                     if (msg.Header.Type == DwgMessageType.StatusRequest)
@@ -210,7 +225,7 @@ namespace DwgSmsServerNet
                         SendToDwg(new StatusResponseBody(Result.Succeed));
 
                         StatusRequestBody body = msg.Body as StatusRequestBody;
-                        
+
                         PortsCount = body.PortsCount;
                         PortsStatuses = new ReadOnlyCollection<DwgPortStatus>(body.PortsStatuses);
                     }
@@ -238,17 +253,24 @@ namespace DwgSmsServerNet
                         SendToDwg(new SendSmsResultResponseBody(Result.Succeed));
 
                         SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
-                        SmsSendingResult(body.Port, body.Number, body.Result, body.CountOfSlices, body.SucceededSlices); 
+                        SmsSendingResult(body.Port, body.Number, body.Result, body.CountOfSlices, body.SucceededSlices);
                     }
 
                     if (msg.Header.Type == DwgMessageType.SendUssdResponse)
                     {
-                        //here logic
+                        SendUssdResponseBody body = msg.Body as SendUssdResponseBody;
+                        _sendUssdResult = body.Result;
+                        
+                        //signal to SendUssd method, that response recieved
+                        _sendUssdEvent.Set();
                     }
 
                     if (msg.Header.Type == DwgMessageType.RecieveUssdMessageRequest)
                     {
                         SendToDwg(new RecieveUssdMessageResponseBody(Result.Succeed));
+
+                        RecieveUssdMessageRequestBody body = msg.Body as RecieveUssdMessageRequestBody;
+                        UssdSendingResult(body.Port, body.Status, body.Content);
                     }
 
                     if (msg.Header.Type == DwgMessageType.KeepAlive)
