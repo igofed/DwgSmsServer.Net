@@ -3,16 +3,62 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DwgSmsServer.Net.Messages
+namespace DwgSmsServerNet.Messages
 {
     class DwgMessage
     {
         public MessageHeader Header { get; private set; }
         public MessageBody Body { get; private set; }
 
-        public DwgMessage(MessageBody body)
+        public DwgMessage(MessageBody body, byte[] mac)
         {
-            Header = new MessageHeader(body.TypeCode, new byte[] { 0, 0, 0, 0, 0, 0 }, body.Length); ;
+            MessageType? type = null;
+
+            if (body is AuthenticationRequestBody)
+            {
+                type = MessageType.AuthenticationRequest;
+            }
+            else if (body is AuthenticationResponseBody)
+            {
+                type = MessageType.AuthenticationResponse;
+            }
+            else if (body is CsqRssiRequestBody)
+            {
+                type = MessageType.CsqRssiRequest;
+            }
+            else if (body is CsqRssiResponseBody)
+            {
+                type = MessageType.CsqRssiResponse;
+            }
+            else if (body is StatusRequestBody)
+            {
+                type = MessageType.StatusRequest;
+            }
+            else if (body is StatusResponseBody)
+            {
+                type = MessageType.StatusResponse;
+            }
+            else if (body is SendSmsRequestBody)
+            {
+                type = MessageType.SendSmsRequest;
+            }
+            else if (body is SendSmsResponseBody)
+            {
+                type = MessageType.SendSmsResponse;
+            }
+            else if (body is SendSmsResultRequestBody)
+            {
+                type = MessageType.SendSmsResultRequest;
+            }
+            else if (body is SendSmsResultResponseBody)
+            {
+                type = MessageType.SendSmsResultResponse;
+            }
+
+            if (!type.HasValue)
+                throw new NotSupportedException("This type of messages not supported");
+
+            Header = new MessageHeader(type.Value, new byte[] { 0, 0, 0, 0, 0, 0 }, body.Length); ;
 
             Body = body;
         }
@@ -114,7 +160,6 @@ namespace DwgSmsServer.Net.Messages
     abstract class MessageBody
     {
         public int Length { get; protected set; }
-        public MessageType TypeCode { get; protected set; }
 
         public virtual byte[] ToBytes()
         {
@@ -138,7 +183,7 @@ namespace DwgSmsServer.Net.Messages
         AuthenticationRequest = 0x0F,
         AuthenticationResponse = 0x10
     }
-    enum SendSmsResult : byte
+    public enum SendSmsResult : byte
     {
         Succeed = 0,
         Fail = 1,
@@ -148,7 +193,7 @@ namespace DwgSmsServer.Net.Messages
         PartialSucceed = 5,
         OtherRrror = 255
     }
-    enum PortStatus : byte
+    public enum PortStatus : byte
     {
         Works = 0,
         NoSimCardInserted = 1,
@@ -165,16 +210,16 @@ namespace DwgSmsServer.Net.Messages
     {
         public AuthenticationRequestBody(byte[] bytes)
         {
-            Login = Encoding.ASCII.GetString(bytes.Take(16).ToArray());
-            Password = Encoding.ASCII.GetString(bytes.Skip(16).Take(16).ToArray());
+            User = Encoding.ASCII.GetString(bytes.Take(16).ToArray()).Trim('\0');
+            Password = Encoding.ASCII.GetString(bytes.Skip(16).Take(16).ToArray()).Trim('\0');
         }
 
-        public string Login { get; set; }
+        public string User { get; set; }
         public string Password { get; set; }
 
         public override string ToString()
         {
-            return string.Format("Login:{0}; Password:{1}", Login, Password);
+            return string.Format("Login:{0}; Password:{1}", User, Password);
         }
     }
     class AuthenticationResponseBody : MessageBody
@@ -183,7 +228,6 @@ namespace DwgSmsServer.Net.Messages
 
         public AuthenticationResponseBody(Result result)
         {
-            TypeCode = MessageType.AuthenticationResponse;
             Length = 1;
 
             Result = result;
@@ -208,7 +252,6 @@ namespace DwgSmsServer.Net.Messages
         public CsqRssiRequestBody(byte[] bytes)
         {
             Length = bytes.Length;
-            TypeCode = MessageType.CsqRssiRequest;
 
             CountOfPorts = bytes.Take(1).First();
             PortStatuses = bytes.Skip(1).ToArray();
@@ -226,7 +269,6 @@ namespace DwgSmsServer.Net.Messages
         public CsqRssiResponseBody(Result result)
         {
             Length = 1;
-            TypeCode = MessageType.CsqRssiResponse;
 
             Result = result;
         }
@@ -250,7 +292,6 @@ namespace DwgSmsServer.Net.Messages
         public StatusRequestBody(byte[] bytes)
         {
             Length = bytes.Length;
-            TypeCode = MessageType.StatusRequest;
 
             CountOfPorts = bytes.Take(1).First();
             PortStatuses = bytes.Skip(1).Select(status => (PortStatus)status).ToArray();
@@ -268,7 +309,6 @@ namespace DwgSmsServer.Net.Messages
         public StatusResponseBody(Result result)
         {
             Length = 1;
-            TypeCode = MessageType.StatusResponse;
 
             Result = result;
         }
@@ -304,7 +344,6 @@ namespace DwgSmsServer.Net.Messages
 
 
             Length = 30 + ContentLength; //30 byte = port + number  + message
-            TypeCode = MessageType.SendSmsRequest;
         }
 
         public override byte[] ToBytes()
@@ -360,7 +399,6 @@ namespace DwgSmsServer.Net.Messages
         public SendSmsResultRequestBody(byte[] bytes)
         {
             Length = bytes.Length;
-            TypeCode = MessageType.SendSmsResultRequest;
 
 
             var readingBytes = bytes.AsEnumerable();
@@ -395,7 +433,6 @@ namespace DwgSmsServer.Net.Messages
         public SendSmsResultResponseBody(Result result)
         {
             Length = 1;
-            TypeCode = MessageType.SendSmsResultResponse;
 
             Result = result;
         }
