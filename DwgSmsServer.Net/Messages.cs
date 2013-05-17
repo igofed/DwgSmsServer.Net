@@ -286,20 +286,20 @@ namespace DwgSmsServerNet.Messages
 
     class StatusRequestBody : MessageBody
     {
-        public byte CountOfPorts { get; set; }
-        public PortStatus[] PortStatuses { get; set; }
+        public byte PortsCount { get; set; }
+        public PortStatus[] PortsStatuses { get; set; }
 
         public StatusRequestBody(byte[] bytes)
         {
             Length = bytes.Length;
 
-            CountOfPorts = bytes.Take(1).First();
-            PortStatuses = bytes.Skip(1).Select(status => (PortStatus)status).ToArray();
+            PortsCount = bytes.Take(1).First();
+            PortsStatuses = bytes.Skip(1).Select(status => (PortStatus)status).ToArray();
         }
 
         public override string ToString()
         {
-            return string.Join(",", PortStatuses);
+            return string.Join(",", PortsStatuses);
         }
     }
     class StatusResponseBody : MessageBody

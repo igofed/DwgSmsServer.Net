@@ -67,8 +67,6 @@ namespace DwgSmsServerNet
             Port = port;
             User = user;
             Password = password;
-
-            State = DwgSmsServerState.Disconnected;
         }
 
         public void Start()
@@ -101,14 +99,12 @@ namespace DwgSmsServerNet
 
                 //Listener started - now in WaitingDwg state
                 State = DwgSmsServerState.WaitingDwg;
-                StateChanged(State);
                 
 
                 _listenSocket = _listener.AcceptSocket();
                 //Dwg just connected with socket. Now starting to connect
                 State = DwgSmsServerState.Connecting;
-                StateChanged(State);
-                
+
                 while (true)
                 {
                     byte[] buffer = new byte[_listenSocket.ReceiveBufferSize];
@@ -144,12 +140,21 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == MessageType.StatusRequest)
                     {
+                        StatusRequestBody body = msg.Body as StatusRequestBody;
+                        PortsCount = body.PortsCount;
+
+                        PortsStatuses = new ReadOnlyCollection<PortStatus>(body.PortsStatuses);
+
                         SendToDwg(new StatusResponseBody(Result.Succeed));
                     }
 
                     if (msg.Header.Type == MessageType.CsqRssiRequest)
                     {
                         SendToDwg(new CsqRssiResponseBody(Result.Succeed));
+
+                        //if this is first csq rssi message - then from this moment we connected
+                        if (State == DwgSmsServerState.Connecting)
+                            State = DwgSmsServerState.Connected;
                     }
                 }
             }
