@@ -7,58 +7,58 @@ namespace DwgSmsServerNet.Messages
 {
     class DwgMessage
     {
-        public MessageHeader Header { get; private set; }
-        public MessageBody Body { get; private set; }
+        public DwgMessageHeader Header { get; private set; }
+        public DwgMessageBody Body { get; private set; }
 
-        public DwgMessage(MessageBody body, byte[] mac)
+        public DwgMessage(DwgMessageBody body, byte[] mac)
         {
-            MessageType? type = null;
+            DwgMessageType? type = null;
 
             if (body is AuthenticationRequestBody)
             {
-                type = MessageType.AuthenticationRequest;
+                type = DwgMessageType.AuthenticationRequest;
             }
             else if (body is AuthenticationResponseBody)
             {
-                type = MessageType.AuthenticationResponse;
+                type = DwgMessageType.AuthenticationResponse;
             }
             else if (body is CsqRssiRequestBody)
             {
-                type = MessageType.CsqRssiRequest;
+                type = DwgMessageType.CsqRssiRequest;
             }
             else if (body is CsqRssiResponseBody)
             {
-                type = MessageType.CsqRssiResponse;
+                type = DwgMessageType.CsqRssiResponse;
             }
             else if (body is StatusRequestBody)
             {
-                type = MessageType.StatusRequest;
+                type = DwgMessageType.StatusRequest;
             }
             else if (body is StatusResponseBody)
             {
-                type = MessageType.StatusResponse;
+                type = DwgMessageType.StatusResponse;
             }
             else if (body is SendSmsRequestBody)
             {
-                type = MessageType.SendSmsRequest;
+                type = DwgMessageType.SendSmsRequest;
             }
             else if (body is SendSmsResponseBody)
             {
-                type = MessageType.SendSmsResponse;
+                type = DwgMessageType.SendSmsResponse;
             }
             else if (body is SendSmsResultRequestBody)
             {
-                type = MessageType.SendSmsResultRequest;
+                type = DwgMessageType.SendSmsResultRequest;
             }
             else if (body is SendSmsResultResponseBody)
             {
-                type = MessageType.SendSmsResultResponse;
+                type = DwgMessageType.SendSmsResultResponse;
             }
 
             if (!type.HasValue)
                 throw new NotSupportedException("This type of messages not supported");
 
-            Header = new MessageHeader(type.Value, new byte[] { 0, 0, 0, 0, 0, 0 }, body.Length); ;
+            Header = new DwgMessageHeader(type.Value, new byte[] { 0, 0, 0, 0, 0, 0 }, body.Length); ;
 
             Body = body;
         }
@@ -67,24 +67,24 @@ namespace DwgSmsServerNet.Messages
         {
             var readingBytes = bytes.AsEnumerable();
 
-            Header = new MessageHeader(readingBytes.Take(24).ToArray());
+            Header = new DwgMessageHeader(readingBytes.Take(24).ToArray());
             readingBytes = readingBytes.Skip(24);
 
             switch (Header.Type)
             {
-                case MessageType.AuthenticationRequest:
+                case DwgMessageType.AuthenticationRequest:
                     Body = new AuthenticationRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
                     break;
-                case MessageType.StatusRequest:
+                case DwgMessageType.StatusRequest:
                     Body = new StatusRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
                     break;
-                case MessageType.CsqRssiRequest:
+                case DwgMessageType.CsqRssiRequest:
                     Body = new CsqRssiRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
                     break;
-                case MessageType.SendSmsResponse:
+                case DwgMessageType.SendSmsResponse:
                     Body = new SendSmsResponseBody(readingBytes.Take(Header.BodyLength).ToArray());
                     break;
-                case MessageType.SendSmsResultRequest:
+                case DwgMessageType.SendSmsResultRequest:
                     Body = new SendSmsResultRequestBody(readingBytes.Take(Header.BodyLength).ToArray());
                     break;
                 default:
@@ -102,28 +102,28 @@ namespace DwgSmsServerNet.Messages
 
         public override string ToString()
         {
-            return String.Format("Header: {0}; Body: {1}", Header, Body);
+            return String.Format("{0}: {1}", Header, Body);
         }
     }
 
-    class MessageHeader
+    class DwgMessageHeader
     {
-        public MessageType Type { get; set; }
-        public byte[] Mac { get; set; }
-        public int BodyLength { get; set; }
+        public DwgMessageType Type { get; private set; }
+        public byte[] Mac { get; private set; }
+        public int BodyLength { get; private set; }
 
-        public MessageHeader(MessageType type, byte[] mac, int bodyLength)
+        public DwgMessageHeader(DwgMessageType type, byte[] mac, int bodyLength)
         {
             Type = type;
             Mac = mac;
             BodyLength = bodyLength;
         }
 
-        public MessageHeader(byte[] bytes)
+        public DwgMessageHeader(byte[] bytes)
         {
             byte[] tmp = new byte[2];
             Array.Copy(bytes, 20, tmp, 0, 2);
-            Type = (MessageType)BitConverter.ToInt16(tmp.Reverse().ToArray(), 0);
+            Type = (DwgMessageType)BitConverter.ToInt16(tmp.Reverse().ToArray(), 0);
 
             if (Type != 0)
             {
@@ -157,7 +157,7 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    abstract class MessageBody
+    abstract class DwgMessageBody
     {
         public int Length { get; protected set; }
 
@@ -166,7 +166,7 @@ namespace DwgSmsServerNet.Messages
             throw new NotSupportedException();
         }
     }
-    enum MessageType : byte
+    enum DwgMessageType : byte
     {
         SendSmsRequest = 0x01,
         SendSmsResponse = 0x02,
@@ -189,7 +189,7 @@ namespace DwgSmsServerNet.Messages
         Fail = 1
     }
 
-    class AuthenticationRequestBody : MessageBody
+    class AuthenticationRequestBody : DwgMessageBody
     {
         public AuthenticationRequestBody(byte[] bytes)
         {
@@ -197,17 +197,17 @@ namespace DwgSmsServerNet.Messages
             Password = Encoding.ASCII.GetString(bytes.Skip(16).Take(16).ToArray()).Trim('\0');
         }
 
-        public string User { get; set; }
-        public string Password { get; set; }
+        public string User { get; private set; }
+        public string Password { get; private set; }
 
         public override string ToString()
         {
-            return string.Format("Login:{0}; Password:{1}", User, Password);
+            return string.Format("User:{0}; Password:{1}", User, Password);
         }
     }
-    class AuthenticationResponseBody : MessageBody
+    class AuthenticationResponseBody : DwgMessageBody
     {
-        public Result Result { get; protected set; }
+        public Result Result { get; private set; }
 
         public AuthenticationResponseBody(Result result)
         {
@@ -227,10 +227,10 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class CsqRssiRequestBody : MessageBody
+    class CsqRssiRequestBody : DwgMessageBody
     {
-        public byte CountOfPorts { get; set; }
-        public byte[] PortStatuses { get; set; }
+        public byte CountOfPorts { get; private set; }
+        public byte[] PortStatuses { get; private set; }
 
         public CsqRssiRequestBody(byte[] bytes)
         {
@@ -245,9 +245,9 @@ namespace DwgSmsServerNet.Messages
             return string.Join(",", PortStatuses);
         }
     }
-    class CsqRssiResponseBody : MessageBody
+    class CsqRssiResponseBody : DwgMessageBody
     {
-        public Result Result { get; protected set; }
+        public Result Result { get; private set; }
 
         public CsqRssiResponseBody(Result result)
         {
@@ -267,10 +267,10 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class StatusRequestBody : MessageBody
+    class StatusRequestBody : DwgMessageBody
     {
-        public byte PortsCount { get; set; }
-        public DwgPortStatus[] PortsStatuses { get; set; }
+        public byte PortsCount { get; private set; }
+        public DwgPortStatus[] PortsStatuses { get; private set; }
 
         public StatusRequestBody(byte[] bytes)
         {
@@ -285,9 +285,9 @@ namespace DwgSmsServerNet.Messages
             return string.Join(",", PortsStatuses);
         }
     }
-    class StatusResponseBody : MessageBody
+    class StatusResponseBody : DwgMessageBody
     {
-        public Result Result { get; protected set; }
+        public Result Result { get; private set; }
 
         public StatusResponseBody(Result result)
         {
@@ -307,13 +307,12 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class SendSmsRequestBody : MessageBody
+    class SendSmsRequestBody : DwgMessageBody
     {
-        public byte Port { get; set; }
-        public string Number { get; set; }
-        public string Message { get; set; }
-
-        protected short ContentLength { get; set; }
+        public byte Port { get; private set; }
+        public string Number { get; private set; }
+        public string Message { get; private set; }
+        public short ContentLength { get; private set; }
 
         public SendSmsRequestBody(byte port, string number, string message)
         {
@@ -328,33 +327,26 @@ namespace DwgSmsServerNet.Messages
 
         public override byte[] ToBytes()
         {
-            byte[] bytes = new byte[Length];
+            //Port number
+            //encding = always Unicode
+            //message type = always SMS
+            //ncountofnumbers = always 1 number to sms
+            byte[] infoBytes = { Port, 1, 0, 1 }; 
+            var numberBytes = Encoding.ASCII.GetBytes(Number).Concat(new byte[24 - Number.Length]);
+            var messageLengthBytes = BitConverter.GetBytes((short)ContentLength).Reverse();
+            var messageBytes = Encoding.BigEndianUnicode.GetBytes(Message);
 
-            bytes[0] = Port;
-            bytes[1] = 1; //always Unicode
-            bytes[2] = 0; //always SMS
-            bytes[3] = 1; //always 1 number to sms
-
-            byte[] numberBytes = Encoding.ASCII.GetBytes(Number).Concat(new byte[24 - Number.Length]).ToArray();
-            Array.Copy(numberBytes, 0, bytes, 4, 24);
-
-            byte[] messageLengthBytes = BitConverter.GetBytes((short)ContentLength).Reverse().ToArray();
-            Array.Copy(messageLengthBytes, 0, bytes, 28, 2);
-
-            byte[] messageBytes = Encoding.BigEndianUnicode.GetBytes(Message);
-            Array.Copy(messageBytes, 0, bytes, 30, messageBytes.Length);
-
-            return bytes;
+            return infoBytes.Concat(numberBytes).Concat(messageLengthBytes).Concat(messageBytes).ToArray();
         }
 
         public override string ToString()
         {
-            return string.Format("Number: {0}", Number);
+            return string.Format("Number: {0}; Message: {1}", Number, Message);
         }
     }
-    class SendSmsResponseBody : MessageBody
+    class SendSmsResponseBody : DwgMessageBody
     {
-        public DwgSendSmsResult Result { get; protected set; }
+        public DwgSendSmsResult Result { get; private set; }
 
         public SendSmsResponseBody(byte[] bytes)
         {
@@ -367,14 +359,14 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class SendSmsResultRequestBody : MessageBody
+    class SendSmsResultRequestBody : DwgMessageBody
     {
-        public byte CountOfNumbers { get; set; }
-        public string Number { get; set; }
-        public byte Port { get; set; }
-        public DwgSendSmsResult Result { get; set; }
-        public byte CountOfSlices { get; set; }
-        public byte SucceededSlices { get; set; }
+        public byte CountOfNumbers { get; private set; }
+        public string Number { get; private set; }
+        public byte Port { get; private set; }
+        public DwgSendSmsResult Result { get; private set; }
+        public byte CountOfSlices { get; private set; }
+        public byte SucceededSlices { get; private set; }
 
         public SendSmsResultRequestBody(byte[] bytes)
         {
@@ -403,12 +395,12 @@ namespace DwgSmsServerNet.Messages
 
         public override string ToString()
         {
-            return string.Format("Number: {0}; Result: {1}; {2}/{3}; ", Number.Trim(), Result, SucceededSlices, CountOfSlices);
+            return string.Format("Number: {0}; Result: {1}; {2}/{3}; ", Number, Result, SucceededSlices, CountOfSlices);
         }
     }
-    class SendSmsResultResponseBody : MessageBody
+    class SendSmsResultResponseBody : DwgMessageBody
     {
-        public Result Result { get; protected set; }
+        public Result Result { get; private set; }
 
         public SendSmsResultResponseBody(Result result)
         {

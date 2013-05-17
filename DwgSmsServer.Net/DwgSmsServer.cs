@@ -19,11 +19,11 @@ namespace DwgSmsServerNet
         /// <summary>
         /// Occurs on server error
         /// </summary>
-        public event DwgErrorDelegate Error = s => { };
+        public event DwgErrorDelegate Error = e => { };
         /// <summary>
         /// Occurs on info about sended SMS from Dwg
         /// </summary>
-        public event DwgSmsSendingResultDelegate SmsSendingResult = (p, s, r, t, sd) => { };
+        public event DwgSmsSendingResultDelegate SmsSendingResult = (p, n, r, t, s) => { };
 
         /// <summary>
         /// Listen port of SMS Server
@@ -56,12 +56,12 @@ namespace DwgSmsServerNet
         /// </summary>
         public ReadOnlyCollection<DwgPortStatus> PortsStatuses { get; set; }
 
-        //all about Dwg listening
+        //all about DWG listening
         private Thread _listenerThread = null;
         private Socket _listenSocket = null;
         private TcpListener _listener = null;
 
-        //mac address of Dwg
+        //mac address of DWG
         private byte[] _macAddress = new byte[6];
 
         //Send sms result
@@ -69,11 +69,11 @@ namespace DwgSmsServerNet
         private DwgSendSmsResult _sendSmsResult;
 
         /// <summary>
-        /// Creating Dwg SMS Server
+        /// Creating DWG SMS Server
         /// </summary>
-        /// <param name="port">Port to listen Dwg. Should be same in Dwg settings</param>
-        /// <param name="user">User name of SMS server. Should be same in Dwg settings</param>
-        /// <param name="password">Password of SMS server. Should be same in Dwg settings</param>
+        /// <param name="port">Port to listen DWG. Should be same in DWG settings</param>
+        /// <param name="user">User name of SMS server. Should be same in DWG settings</param>
+        /// <param name="password">Password of SMS server. Should be same in DWG settings</param>
         public DwgSmsServer(int port, string user, string password)
         {
             if (string.IsNullOrEmpty(user))
@@ -92,7 +92,7 @@ namespace DwgSmsServerNet
         }
 
         /// <summary>
-        /// Start Dwg SMS server
+        /// Start DWG SMS server
         /// </summary>
         public void Start()
         {
@@ -106,7 +106,7 @@ namespace DwgSmsServerNet
         }
 
         /// <summary>
-        /// Stop Dwg SMS server
+        /// Stop DWG SMS server
         /// </summary>
         public void Stop()
         {
@@ -119,7 +119,7 @@ namespace DwgSmsServerNet
         /// <summary>
         /// Send SMS message
         /// </summary>
-        /// <param name="port">Dwg port to send from</param>
+        /// <param name="port">DWG port to send from</param>
         /// <param name="number">Phone number</param>
         /// <param name="message">Message to send</param>
         public DwgSendSmsResult SendSms(byte port, string number, string message)
@@ -140,7 +140,7 @@ namespace DwgSmsServerNet
             return _sendSmsResult;
         }
 
-
+        //main wotk method
         private void WorkingThread()
         {
             try
@@ -165,7 +165,7 @@ namespace DwgSmsServerNet
 
                     Console.WriteLine(msg);
 
-                    if (msg.Header.Type == MessageType.AuthenticationRequest)
+                    if (msg.Header.Type == DwgMessageType.AuthenticationRequest)
                     {
                         AuthenticationRequestBody body = msg.Body as AuthenticationRequestBody;
                         if (body.User == User)
@@ -189,7 +189,7 @@ namespace DwgSmsServerNet
                         }        
                     }
 
-                    if (msg.Header.Type == MessageType.StatusRequest)
+                    if (msg.Header.Type == DwgMessageType.StatusRequest)
                     {
                         SendToDwg(new StatusResponseBody(Result.Succeed));
 
@@ -199,7 +199,7 @@ namespace DwgSmsServerNet
                         PortsStatuses = new ReadOnlyCollection<DwgPortStatus>(body.PortsStatuses);
                     }
 
-                    if (msg.Header.Type == MessageType.CsqRssiRequest)
+                    if (msg.Header.Type == DwgMessageType.CsqRssiRequest)
                     {
                         SendToDwg(new CsqRssiResponseBody(Result.Succeed));
 
@@ -208,7 +208,7 @@ namespace DwgSmsServerNet
                             State = DwgSmsServerState.Connected;
                     }
 
-                    if (msg.Header.Type == MessageType.SendSmsResponse)
+                    if (msg.Header.Type == DwgMessageType.SendSmsResponse)
                     {
                         SendSmsResponseBody body = msg.Body as SendSmsResponseBody;
                         _sendSmsResult = body.Result;
@@ -217,7 +217,7 @@ namespace DwgSmsServerNet
                         _sendSmsEvent.Set();
                     }
 
-                    if (msg.Header.Type == MessageType.SendSmsResultRequest)
+                    if (msg.Header.Type == DwgMessageType.SendSmsResultRequest)
                     {
                         SendToDwg(new SendSmsResultResponseBody(Result.Succeed));
 
@@ -233,7 +233,8 @@ namespace DwgSmsServerNet
             }
         }
 
-        private void SendToDwg(MessageBody body)
+        //sending data back to DWG
+        private void SendToDwg(DwgMessageBody body)
         {
             DwgMessage msgToSend = new DwgMessage(body, _macAddress);
             _listenSocket.Send(msgToSend.ToBytes());
