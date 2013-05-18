@@ -265,12 +265,19 @@ namespace DwgSmsServerNet
                         _sendUssdEvent.Set();
                     }
 
-                    if (msg.Header.Type == DwgMessageType.RecieveUssdMessageRequest)
+                    if (msg.Header.Type == DwgMessageType.ReceiveUssdMessageRequest)
                     {
-                        SendToDwg(new RecieveUssdMessageResponseBody(Result.Succeed));
+                        SendToDwg(new ReceiveUssdMessageResponseBody(Result.Succeed));
 
-                        RecieveUssdMessageRequestBody body = msg.Body as RecieveUssdMessageRequestBody;
+                        ReceiveUssdMessageRequestBody body = msg.Body as ReceiveUssdMessageRequestBody;
                         UssdSendingResult(body.Port, body.Status, body.Content);
+                    }
+
+                    if (msg.Header.Type == DwgMessageType.ReceiveSmsMessageRequest)
+                    {
+                        SendToDwg(new ReceiveSmsMessageResponseBody(Result.Succeed));
+
+                        //logic to notify
                     }
 
                     if (msg.Header.Type == DwgMessageType.KeepAlive)

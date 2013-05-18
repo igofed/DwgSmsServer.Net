@@ -62,13 +62,21 @@ namespace DwgSmsServerNet.Messages
             {
                 type = DwgMessageType.SendUssdResponse;
             }
-            else if (body is RecieveUssdMessageRequestBody)
+            else if (body is ReceiveUssdMessageRequestBody)
             {
-                type = DwgMessageType.RecieveUssdMessageRequest;
+                type = DwgMessageType.ReceiveUssdMessageRequest;
             }
-            else if (body is RecieveUssdMessageResponseBody)
+            else if (body is ReceiveUssdMessageResponseBody)
             {
-                type = DwgMessageType.RecieveUssdMessageResponse;
+                type = DwgMessageType.ReceiveUssdMessageResponse;
+            }
+            else if (body is ReceiveSmsMessageRequestBody)
+            {
+                type = DwgMessageType.ReceiveSmsMessageRequest;
+            }
+            else if (body is ReceiveSmsMessageResponseBody)
+            {
+                type = DwgMessageType.ReceiveSmsMessageResponse;
             }
 
             if (!type.HasValue)
@@ -111,8 +119,11 @@ namespace DwgSmsServerNet.Messages
                 case DwgMessageType.SendUssdResponse:
                     Body = new SendUssdResponseBody(bodyBytes);
                     break;
-                case DwgMessageType.RecieveUssdMessageRequest:
-                    Body = new RecieveUssdMessageRequestBody(bodyBytes);
+                case DwgMessageType.ReceiveUssdMessageRequest:
+                    Body = new ReceiveUssdMessageRequestBody(bodyBytes);
+                    break;
+                case DwgMessageType.ReceiveSmsMessageRequest:
+                    Body = new ReceiveSmsMessageRequestBody(bodyBytes);
                     break;
                 default:
                     throw new NotSupportedException();
@@ -203,7 +214,7 @@ namespace DwgSmsServerNet.Messages
         SendSmsResultRequest = 0x03,
         SendSmsResultResponse = 0x04,
 
-        ReceiveSmsMessage = 0x05,
+        ReceiveSmsMessageRequest = 0x05,
         ReceiveSmsMessageResponse = 0x06,
 
         StatusRequest = 0x07,
@@ -212,8 +223,8 @@ namespace DwgSmsServerNet.Messages
         SendUssdRequest = 0x09,
         SendUssdResponse = 0x0A,
 
-        RecieveUssdMessageRequest = 0x0B,
-        RecieveUssdMessageResponse = 0x0C,
+        ReceiveUssdMessageRequest = 0x0B,
+        ReceiveUssdMessageResponse = 0x0C,
 
         CsqRssiRequest = 0x0D,
         CsqRssiResponse = 0x0E,
@@ -378,11 +389,71 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class ReceiveSmsMessageBody : DwgMessageBody
+    class ReceiveSmsMessageRequestBody : DwgMessageBody
     {
+        public string Number { get; private set; }
+        public byte Port { get; private set; }
+        public DateTime DateTime { get; private set; }
+        public byte Timezone { get; private set; }
+        public short ContentLength { get; private set; }
+        public string Content { get; private set; }
+
+        public ReceiveSmsMessageRequestBody(byte[] bytes)
+        {
+            var readingBytes = bytes.AsEnumerable();
+
+            Number = Encoding.ASCII.GetString(readingBytes.Take(24).ToArray()).Trim('\0');
+            readingBytes = readingBytes.Skip(24);
+
+            //message type always SMS (0)
+            readingBytes = readingBytes.Skip(1);
+
+            Port = readingBytes.Take(1).First();
+            readingBytes = readingBytes.Skip(1);
+
+            string timestamp = Encoding.ASCII.GetString(readingBytes.Take(15).ToArray()).Trim('\0');
+            DateTime = DateTime.ParseExact(timestamp, "yyyyMMddHHmmss", null);
+            readingBytes = readingBytes.Skip(15);
+
+            Timezone = readingBytes.Take(1).First();
+            readingBytes = readingBytes.Skip(1);
+
+            //always should be Unicode, if GSM7bit - need to support that encoding
+            readingBytes = readingBytes.Skip(1);
+
+            ContentLength = BitConverter.ToInt16(readingBytes.Take(2).Reverse().ToArray(), 0);
+            readingBytes = readingBytes.Skip(2);
+
+            Content = Encoding.BigEndianUnicode.GetString(readingBytes.Take(ContentLength).ToArray());
+
+            Length = 45 + ContentLength;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1}", Number, Content);
+        }
     }
     class ReceiveSmsMessageResponseBody : DwgMessageBody
     {
+        public Result Result { get; private set; }
+
+        public ReceiveSmsMessageResponseBody(Result result)
+        {
+            Length = 1;
+
+            Result = result;
+        }
+
+        public override byte[] ToBytes()
+        {
+            return new byte[] { (byte)Result };
+        }
+
+        public override string ToString()
+        {
+            return Result.ToString();
+        }
     }
 
     class StatusRequestBody : DwgMessageBody
@@ -512,14 +583,14 @@ namespace DwgSmsServerNet.Messages
         }
     }
 
-    class RecieveUssdMessageRequestBody : DwgMessageBody
+    class ReceiveUssdMessageRequestBody : DwgMessageBody
     {
         public byte Port { get; set; }
         public DwgRecieveUssdResult Status { get; set; }
         public short ContentLength { get; set; }
         public string Content { get; set; }
 
-        public RecieveUssdMessageRequestBody(byte[] bytes)
+        public ReceiveUssdMessageRequestBody(byte[] bytes)
         {
             Length = bytes.Length;
 
@@ -537,11 +608,11 @@ namespace DwgSmsServerNet.Messages
             return string.Format("{0}: {1}", Status, Content);
         }
     }
-    class RecieveUssdMessageResponseBody : DwgMessageBody
+    class ReceiveUssdMessageResponseBody : DwgMessageBody
     {
         public Result Result { get; private set; }
 
-        public RecieveUssdMessageResponseBody(Result result)
+        public ReceiveUssdMessageResponseBody(Result result)
         {
             Length = 1;
 
