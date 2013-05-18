@@ -203,6 +203,9 @@ namespace DwgSmsServerNet.Messages
         SendSmsResultRequest = 0x03,
         SendSmsResultResponse = 0x04,
 
+        ReceiveSmsMessage = 0x05,
+        ReceiveSmsMessageResponse = 0x06,
+
         StatusRequest = 0x07,
         StatusResponse = 0x08,
 
@@ -373,6 +376,13 @@ namespace DwgSmsServerNet.Messages
         {
             return Result.ToString();
         }
+    }
+
+    class ReceiveSmsMessageBody : DwgMessageBody
+    {
+    }
+    class ReceiveSmsMessageResponseBody : DwgMessageBody
+    {
     }
 
     class StatusRequestBody : DwgMessageBody
