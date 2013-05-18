@@ -25,13 +25,21 @@ namespace DwgSmsServerNet
     /// <param name="succededSlices">Count of succeeded SMS slices</param>
     public delegate void DwgSmsSendingResultDelegate(int port, string number, DwgSendSmsResult result, int totalSlices, int succededSlices);
     /// <summary>
-    /// delegate for informing about sent USSD result
+    /// Delegate for informing about sent USSD result
     /// </summary>
     /// <param name="port">Port of DWG, which send USSD</param>
     /// <param name="result">Result of USSD from network</param>
     /// <param name="message">Message from executing USSD</param>
-    public delegate void DwgUssdSendingResultDelegate(int port, DwgRecieveUssdResult result, string message);
-    
+    public delegate void DwgUssdSendingResultDelegate(int port, DwgRecieveUssdResult result, string message);    
+    /// <summary>
+    /// Delegate for informing about receieved SMS 
+    /// </summary>
+    /// <param name="port">Port receieved SMS</param>
+    /// <param name="dateTime">Time of sending SMS</param>
+    /// <param name="number">Number, that sent SMS</param>
+    /// <param name="message">SMS text</param>
+    public delegate void DwgSmsReceivedDelegate(int port, DateTime dateTime, string number, string message);
+
     /// <summary>
     /// DWG SMS server state
     /// </summary>

@@ -13,7 +13,7 @@ namespace DwgSmsServerNet
     public class DwgSmsServer
     {
         /// <summary>
-        /// Occurs when State of server changed
+        /// Occurs on State of server changed
         /// </summary>
         public event DwgStateChangedDelegate StateChanged = s => { };
         /// <summary>
@@ -28,7 +28,10 @@ namespace DwgSmsServerNet
         /// Occurs on info abous sent USSD from DWG
         /// </summary>
         public event DwgUssdSendingResultDelegate UssdSendingResult = (p, r, m) => { };
-
+        /// <summary>
+        /// Occurs on SMS receieved
+        /// </summary>
+        public event DwgSmsReceivedDelegate SmsReceieved = (p, d, n, m) => { };
 
         /// <summary>
         /// Listen port of SMS Server
@@ -277,7 +280,8 @@ namespace DwgSmsServerNet
                     {
                         SendToDwg(new ReceiveSmsMessageResponseBody(Result.Succeed));
 
-                        //logic to notify
+                        ReceiveSmsMessageRequestBody body = msg.Body as ReceiveSmsMessageRequestBody;
+                        SmsReceieved(body.Port, body.DateTime, body.Number, body.Content);
                     }
 
                     if (msg.Header.Type == DwgMessageType.KeepAlive)
