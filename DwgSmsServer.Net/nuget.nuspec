@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>sample</id>
+	<title>DWG SMS Server for .Net</title>
+    <version>1.0</version>
+    <authors>Igor Fedchun (mail@itornotit.com)</authors>
+    <description>Fully featured C# DWG Server for sending/receiving SMS and USSD with Dinstar SMS API 2.0</description>
+    <projectUrl>https://github.com/igofed/DwgSmsServer.Net</projectUrl>
+    <licenseUrl>http://opensource.org/licenses/mit-license</licenseUrl>
+	<requireLicenseAcceptance>false</requireLicenseAcceptance>
+  </metadata>
+</package>

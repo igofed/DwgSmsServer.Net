@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DwgSmsServerNet</RootNamespace>
-    <AssemblyName>DWG SMS server for .Net</AssemblyName>
+    <AssemblyName>DwgSmsServer.Net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
