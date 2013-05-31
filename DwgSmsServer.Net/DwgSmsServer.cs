@@ -10,6 +10,11 @@ using System.Collections.ObjectModel;
 
 namespace DwgSmsServerNet
 {
+    /// <summary>
+    /// Fully featured DWG SMS server for Dinstar SMS API 2.0
+    /// Can be used for sending/receiving SMS and sending USSD
+    /// Available under MIT License
+    /// </summary>
     public class DwgSmsServer
     {
         /// <summary>

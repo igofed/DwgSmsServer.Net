@@ -67,12 +67,33 @@ namespace DwgSmsServerNet
     /// </summary>
     public enum DwgSendSmsResult : byte
     {
+        /// <summary>
+        /// SMS sent successfully
+        /// </summary>
         Succeed = 0,
+        /// <summary>
+        /// SMS sent failed
+        /// </summary>
         Fail = 1,
+        /// <summary>
+        /// SMS sent timeout
+        /// </summary>
         Timeout = 2,
+        /// <summary>
+        /// Something wrong with sending SMS request
+        /// </summary>
         BadRequest = 3,
+        /// <summary>
+        /// Specified port is not available for sending SMS
+        /// </summary>
         PortUnavailable = 4,
+        /// <summary>
+        /// Not all parts of SMS successfully sent
+        /// </summary>
         PartialSucceed = 5,
+        /// <summary>
+        /// Some unknown error occurs while sending SMS
+        /// </summary>
         OtherError = 255
     }
     /// <summary>
@@ -80,9 +101,21 @@ namespace DwgSmsServerNet
     /// </summary>
     public enum DwgPortStatus : byte
     {
+        /// <summary>
+        /// Port normally works
+        /// </summary>
         Works = 0,
+        /// <summary>
+        /// No SIM card inserted
+        /// </summary>
         NoSim = 1,
+        /// <summary>
+        /// Not registered on mobile network
+        /// </summary>
         NotRegistered = 2,
+        /// <summary>
+        /// No hardware port
+        /// </summary>
         Unavailable = 3
     }
     /// <summary>
@@ -90,7 +123,13 @@ namespace DwgSmsServerNet
     /// </summary>
     public enum DwgUssdType
     {
+        /// <summary>
+        /// Send USSD request
+        /// </summary>
         Send = 1,
+        /// <summary>
+        /// Complete current USSD session
+        /// </summary>
         EndSession = 2
     }
     /// <summary>
@@ -98,11 +137,29 @@ namespace DwgSmsServerNet
     /// </summary>
     public enum DwgSendUssdResult : byte
     {
+        /// <summary>
+        /// USSD sent successfully
+        /// </summary>
         Succeed = 0,
+        /// <summary>
+        /// USSD sent failed
+        /// </summary>
         Fail = 1,
+        /// <summary>
+        /// USSD sent timeout
+        /// </summary>
         Timeout = 2,
+        /// <summary>
+        /// Something wrong with sending USSD request
+        /// </summary>
         BadRequest = 3,
+        /// <summary>
+        /// Specified port is not available for sending SMS
+        /// </summary>
         PortUnavailable = 4,
+        /// <summary>
+        /// Some unknown error occurs while sending SMS
+        /// </summary>
         OtherError = 255
     }
     /// <summary>
@@ -110,9 +167,21 @@ namespace DwgSmsServerNet
     /// </summary>
     public enum DwgRecieveUssdResult : byte
     {
+        /// <summary>
+        /// No further user action required
+        /// </summary>
         NoFurtherUserActionRequired = 0,
+        /// <summary>
+        /// Further user action required
+        /// </summary>
         FurtherUserActionRequired = 1,
+        /// <summary>
+        /// Ussd terminated by network
+        /// </summary>
         UssdTerminatedByNetwork = 2,
+        /// <summary>
+        /// Operation not supported
+        /// </summary>
         OperationNotSupported = 4
     }
 }
