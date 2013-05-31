@@ -5,14 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DwgSmsServer.Net")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("DwgSmsServer.Net")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2013")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyTitle("DWG SMS Server for .Net")]
+[assembly: AssemblyDescription("Fully featured C# DWG Server for sending/receiving SMS and USSD with Dinstar SMS API 2.0")]
+[assembly: AssemblyProduct("DWG SMS Server for .Net")]
+[assembly: AssemblyCopyright("Library is available under LGPL")]
+[assembly: AssemblyCompany("Igor Fedchun (mail@itornotit.com)")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
