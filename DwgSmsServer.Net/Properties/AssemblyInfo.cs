@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DWG SMS Server for .Net")]
 [assembly: AssemblyDescription("Fully featured C# DWG Server for sending/receiving SMS and USSD with Dinstar SMS API 2.0")]
 [assembly: AssemblyProduct("DWG SMS Server for .Net")]
-[assembly: AssemblyCopyright("Library is available under LGPL")]
 [assembly: AssemblyCompany("Igor Fedchun (mail@itornotit.com)")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
