@@ -3,7 +3,7 @@
   <metadata>
     <id>DwgSmsServer.Net</id>
     <title>DWG SMS Server for .Net</title>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <authors>Igor Fedchun (mail@itornotit.com)</authors>
     <description>Fully featured C# DWG Server for sending/receiving SMS and USSD with Dinstar SMS API 2.0</description>
     <projectUrl>https://github.com/igofed/DwgSmsServer.Net</projectUrl>
