@@ -42,7 +42,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DwgSmsServer.cs" />
-    <Compile Include="Messages.cs" />
+    <Compile Include="Gsm7BitEncoding.cs" />
+    <Compile Include="Messages\Bodies\AuthenticationRequestBody.cs" />
+    <Compile Include="Messages\Bodies\AuthenticationResponseBody.cs" />
+    <Compile Include="Messages\Bodies\CsqRssiRequestBody.cs" />
+    <Compile Include="Messages\Bodies\CsqRssiResponseBody.cs" />
+    <Compile Include="Messages\Bodies\KeepAliveBody.cs" />
+    <Compile Include="Messages\Bodies\ReceiveSmsMessageRequestBody.cs" />
+    <Compile Include="Messages\Bodies\ReceiveSmsMessageResponseBody.cs" />
+    <Compile Include="Messages\Bodies\ReceiveUssdMessageRequestBody.cs" />
+    <Compile Include="Messages\Bodies\ReceiveUssdMessageResponseBody.cs" />
+    <Compile Include="Messages\Bodies\SendSmsRequestBody.cs" />
+    <Compile Include="Messages\Bodies\SendSmsResponseBody.cs" />
+    <Compile Include="Messages\Bodies\SendSmsResultRequestBody.cs" />
+    <Compile Include="Messages\Bodies\SendSmsResultResponseBody.cs" />
+    <Compile Include="Messages\Bodies\SendUssdRequestBody.cs" />
+    <Compile Include="Messages\Bodies\SendUssdResponseBody.cs" />
+    <Compile Include="Messages\Bodies\StatusRequestBody.cs" />
+    <Compile Include="Messages\Bodies\StatusResponseBody.cs" />
+    <Compile Include="Messages\DwgMessage.cs" />
+    <Compile Include="Messages\DwgMessageBody.cs" />
+    <Compile Include="Messages\DwgMessageHeader.cs" />
+    <Compile Include="Messages\DwgMessageType.cs" />
+    <Compile Include="Messages\DwgMessageResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stuff.cs" />
   </ItemGroup>

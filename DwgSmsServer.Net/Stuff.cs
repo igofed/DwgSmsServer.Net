@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace DwgSmsServerNet
 {
@@ -62,6 +59,7 @@ namespace DwgSmsServerNet
         /// </summary>
         Connected
     }
+
     /// <summary>
     /// Result of sending SMS
     /// </summary>
@@ -96,6 +94,7 @@ namespace DwgSmsServerNet
         /// </summary>
         OtherError = 255
     }
+
     /// <summary>
     /// DWG port status
     /// </summary>
@@ -118,6 +117,7 @@ namespace DwgSmsServerNet
         /// </summary>
         Unavailable = 3
     }
+
     /// <summary>
     /// DWG USSD type
     /// </summary>
@@ -132,6 +132,7 @@ namespace DwgSmsServerNet
         /// </summary>
         EndSession = 2
     }
+
     /// <summary>
     /// Result of sending USSD
     /// </summary>
@@ -162,6 +163,7 @@ namespace DwgSmsServerNet
         /// </summary>
         OtherError = 255
     }
+
     /// <summary>
     /// Result of USSD
     /// </summary>
@@ -183,5 +185,20 @@ namespace DwgSmsServerNet
         /// Operation not supported
         /// </summary>
         OperationNotSupported = 4
+    }
+
+    /// <summary>
+    /// Encoding of SMS
+    /// </summary>
+    public enum DwgSmsEncoding
+    {
+        /// <summary>
+        /// UNICODE
+        /// </summary>
+        Unicode = 1,
+        /// <summary>
+        /// GSM 7bit
+        /// </summary>
+        Gsm7Bit = 0
     }
 }

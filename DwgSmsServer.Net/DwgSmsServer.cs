@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DwgSmsServerNet.Messages;
+using DwgSmsServerNet.Messages.Bodies;
+using System;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Net.Sockets;
-using System.Net;
-using DwgSmsServerNet.Messages;
-using System.Collections.ObjectModel;
 
 namespace DwgSmsServerNet
 {
@@ -139,17 +139,18 @@ namespace DwgSmsServerNet
         /// <param name="port">DWG port to send from</param>
         /// <param name="number">Phone number</param>
         /// <param name="message">Message to send</param>
+        /// <param name="smsEncoding">Encoding of SMS to send, Unicode by default</param>
         /// <returns>Result of sending SMS</returns>
-        public DwgSendSmsResult SendSms(byte port, string number, string message)
+        public DwgSendSmsResult SendSms(byte port, string number, string message, DwgSmsEncoding smsEncoding = DwgSmsEncoding.Unicode)
         {
             if (State != DwgSmsServerState.Connected)
                 throw new NotSupportedException("Can't send SMS from not connected server");
-            if (port < 0 || port > PortsCount || PortsStatuses[port] != DwgPortStatus.Works)
+            if (port > PortsCount || PortsStatuses[port] != DwgPortStatus.Works)
                 throw new NotSupportedException("Port should be in \"Works\" status");
             if (Encoding.BigEndianUnicode.GetByteCount(message) > 1340)
                 throw new NotSupportedException("Message encoded to Unicode should be less than 1340 bytes");
 
-            SendSmsRequestBody body = new SendSmsRequestBody(port, number, message);
+            SendSmsRequestBody body = new SendSmsRequestBody(port, number, message, smsEncoding);
             SendToDwg(body);
 
             //wait for response from dwg
@@ -169,7 +170,7 @@ namespace DwgSmsServerNet
         {
             if (State != DwgSmsServerState.Connected)
                 throw new NotSupportedException("Can't send SMS from not connected server");
-            if (port < 0 || port > PortsCount || PortsStatuses[port] != DwgPortStatus.Works)
+            if (port > PortsCount || PortsStatuses[port] != DwgPortStatus.Works)
                 throw new NotSupportedException("Port should be in \"Works\" status");
 
             SendToDwg(new SendUssdRequestBody(port, type, ussd));
@@ -213,7 +214,7 @@ namespace DwgSmsServerNet
                             {
                                 _macAddress = msg.Header.Mac;
 
-                                SendToDwg(new AuthenticationResponseBody(Result.Succeed));
+                                SendToDwg(new AuthenticationResponseBody(DwgMessageResult.Succeed));
                             }
                             else
                             {
@@ -230,7 +231,7 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == DwgMessageType.StatusRequest)
                     {
-                        SendToDwg(new StatusResponseBody(Result.Succeed));
+                        SendToDwg(new StatusResponseBody(DwgMessageResult.Succeed));
 
                         StatusRequestBody body = msg.Body as StatusRequestBody;
 
@@ -240,7 +241,7 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == DwgMessageType.CsqRssiRequest)
                     {
-                        SendToDwg(new CsqRssiResponseBody(Result.Succeed));
+                        SendToDwg(new CsqRssiResponseBody(DwgMessageResult.Succeed));
 
                         //if this is first csq rssi message - then from this moment we connected
                         if (State == DwgSmsServerState.Connecting)
@@ -258,7 +259,7 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == DwgMessageType.SendSmsResultRequest)
                     {
-                        SendToDwg(new SendSmsResultResponseBody(Result.Succeed));
+                        SendToDwg(new SendSmsResultResponseBody(DwgMessageResult.Succeed));
 
                         SendSmsResultRequestBody body = msg.Body as SendSmsResultRequestBody;
                         SmsSendingResult(body.Port, body.Number, body.Result, body.CountOfSlices, body.SucceededSlices);
@@ -275,7 +276,7 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == DwgMessageType.ReceiveUssdMessageRequest)
                     {
-                        SendToDwg(new ReceiveUssdMessageResponseBody(Result.Succeed));
+                        SendToDwg(new ReceiveUssdMessageResponseBody(DwgMessageResult.Succeed));
 
                         ReceiveUssdMessageRequestBody body = msg.Body as ReceiveUssdMessageRequestBody;
                         UssdSendingResult(body.Port, body.Status, body.Content);
@@ -283,7 +284,7 @@ namespace DwgSmsServerNet
 
                     if (msg.Header.Type == DwgMessageType.ReceiveSmsMessageRequest)
                     {
-                        SendToDwg(new ReceiveSmsMessageResponseBody(Result.Succeed));
+                        SendToDwg(new ReceiveSmsMessageResponseBody(DwgMessageResult.Succeed));
 
                         ReceiveSmsMessageRequestBody body = msg.Body as ReceiveSmsMessageRequestBody;
                         SmsReceieved(body.Port, body.DateTime, body.Number, body.Content);
