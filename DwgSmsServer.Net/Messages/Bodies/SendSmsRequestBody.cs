@@ -12,7 +12,7 @@ namespace DwgSmsServerNet.Messages.Bodies
         public short ContentLength { get; private set; }
         public DwgSmsEncoding SmsEncoding { get; private set; }
 
-        private Encoding _encoding;
+        private readonly Encoding _encoding;
 
         public SendSmsRequestBody(byte port, string number, string message, DwgSmsEncoding smsEncoding)
         {
@@ -25,16 +25,16 @@ namespace DwgSmsServerNet.Messages.Bodies
 
             ContentLength = (short)_encoding.GetByteCount(message);
 
-            Length = 30 + ContentLength; //30 byte = port + number  + message
+            Length = 30 + ContentLength; //30 byte = port + number  + encoding
         }
 
         public override byte[] ToBytes()
         {
             //Port number
-            //encding = always Unicode
+            //encoding 
             //message type = always SMS
             //ncountofnumbers = always 1 number to sms
-            byte[] infoBytes = { Port, 1, 0, 1 };
+            byte[] infoBytes = { Port, (byte)SmsEncoding, 0, 1 };
             var numberBytes = Encoding.ASCII.GetBytes(Number).Concat(new byte[24 - Number.Length]);
             var messageLengthBytes = BitConverter.GetBytes(ContentLength).Reverse();
 

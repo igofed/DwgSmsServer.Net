@@ -190,7 +190,7 @@ namespace DwgSmsServerNet
     /// <summary>
     /// Encoding of SMS
     /// </summary>
-    public enum DwgSmsEncoding
+    public enum DwgSmsEncoding : byte
     {
         /// <summary>
         /// UNICODE
