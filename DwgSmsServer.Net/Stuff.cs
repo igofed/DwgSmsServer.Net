@@ -38,6 +38,16 @@ namespace DwgSmsServerNet
     public delegate void DwgSmsReceivedDelegate(int port, DateTime dateTime, string number, string message);
 
     /// <summary>
+    /// Delegate for informing about receieved SMS receipt
+    /// </summary>
+    /// <param name="port">Port receieved SMS</param>
+    /// <param name="dateTime">Time of sending SMS</param>
+    /// <param name="number">Number, that sent SMS</param>
+    /// <param name="receiptId">ID of receipt</param>
+    /// <param name="state">State of receipt</param>
+    public delegate void DwgSmsReceiptDelegate(int port, DateTime dateTime, string number, int receiptId, DwgSmsReceiptState state);
+
+    /// <summary>
     /// DWG SMS server state
     /// </summary>
     public enum DwgSmsServerState
@@ -200,5 +210,24 @@ namespace DwgSmsServerNet
         /// GSM 7bit
         /// </summary>
         Gsm7Bit = 0
+    }
+
+    /// <summary>
+    /// State of SMS receipt
+    /// </summary>
+    public enum DwgSmsReceiptState : byte
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Success,
+        /// <summary>
+        /// Temporary error
+        /// </summary>
+        TemporaryError,
+        /// <summary>
+        /// Permanent error
+        /// </summary>
+        PermanentError
     }
 }

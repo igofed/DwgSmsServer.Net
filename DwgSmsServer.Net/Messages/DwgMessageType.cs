@@ -26,6 +26,9 @@
         CsqRssiResponse = 0x0E,
 
         AuthenticationRequest = 0x0F,
-        AuthenticationResponse = 0x10
+        AuthenticationResponse = 0x10,
+
+        ReceiveSmsReceiptRequest = 0x11,
+        ReceiveSmsReceiptResponse = 0x12
     }
 }

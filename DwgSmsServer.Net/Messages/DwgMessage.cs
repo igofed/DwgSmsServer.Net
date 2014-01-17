@@ -77,6 +77,14 @@ namespace DwgSmsServerNet.Messages
             {
                 type = DwgMessageType.ReceiveSmsMessageResponse;
             }
+            else if (body is ReceiveSmsReceiptRequestBody)
+            {
+                type = DwgMessageType.ReceiveSmsReceiptRequest; ;
+            }
+            else if (body is ReceiveSmsReceiptResponseBody)
+            {
+                type = DwgMessageType.ReceiveSmsReceiptResponse;
+            }
 
             if (!type.HasValue)
                 throw new NotSupportedException("This type of messages not supported");
@@ -124,6 +132,9 @@ namespace DwgSmsServerNet.Messages
                 case DwgMessageType.ReceiveSmsMessageRequest:
                     Body = new ReceiveSmsMessageRequestBody(bodyBytes);
                     break;
+                case DwgMessageType.ReceiveSmsReceiptRequest:
+                    Body = new ReceiveSmsReceiptRequestBody(bodyBytes);
+                    break;
                 default:
                     throw new NotSupportedException();
             }
@@ -142,10 +153,4 @@ namespace DwgSmsServerNet.Messages
             return String.Format("{0}: {1}", Header, Body);
         }
     }
-
-    
-
-    
-   
-    
 }

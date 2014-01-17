@@ -37,6 +37,10 @@ namespace DwgSmsServerNet
         /// Occurs on SMS receieved
         /// </summary>
         public event DwgSmsReceivedDelegate SmsReceieved = (p, d, n, m) => { };
+        /// <summary>
+        /// Occurs on SMS receipt
+        /// </summary>
+        public event DwgSmsReceiptDelegate SmsReceipt = (p, d, n, i, s) => { }; 
 
         /// <summary>
         /// Listen port of SMS Server
@@ -288,6 +292,14 @@ namespace DwgSmsServerNet
 
                         ReceiveSmsMessageRequestBody body = msg.Body as ReceiveSmsMessageRequestBody;
                         SmsReceieved(body.Port, body.DateTime, body.Number, body.Content);
+                    }
+
+                    if (msg.Header.Type == DwgMessageType.ReceiveSmsReceiptRequest)
+                    {
+                        SendToDwg(new ReceiveSmsReceiptResponseBody(DwgMessageResult.Succeed));
+
+                        ReceiveSmsReceiptRequestBody body = msg.Body as ReceiveSmsReceiptRequestBody;
+                        SmsReceipt(body.Port, body.DateTime, body.Number, body.ReceiptId, body.State);
                     }
 
                     if (msg.Header.Type == DwgMessageType.KeepAlive)

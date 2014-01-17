@@ -50,6 +50,8 @@
     <Compile Include="Messages\Bodies\KeepAliveBody.cs" />
     <Compile Include="Messages\Bodies\ReceiveSmsMessageRequestBody.cs" />
     <Compile Include="Messages\Bodies\ReceiveSmsMessageResponseBody.cs" />
+    <Compile Include="Messages\Bodies\ReceiveSmsReceiptResponseBody.cs" />
+    <Compile Include="Messages\Bodies\ReceiveSmsReceiptRequestBody.cs" />
     <Compile Include="Messages\Bodies\ReceiveUssdMessageRequestBody.cs" />
     <Compile Include="Messages\Bodies\ReceiveUssdMessageResponseBody.cs" />
     <Compile Include="Messages\Bodies\SendSmsRequestBody.cs" />
